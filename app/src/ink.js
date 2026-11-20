@@ -51,8 +51,8 @@ export const GRADES = {
     id: 'dusk',
     label: 'Dusk',
     note: 'violet + tangerine',
-    plates: ['#1b0f33', '#40205a', '#8b2f6c', '#d9556a'],
-    highlight: '#f6a067',
+    plates: ['#180d2e', '#341a4f', '#63245f', '#a8366a', '#e06472'],
+    highlight: '#f7ad74',
     rim: '#ffd9a6',
     shade: '#2b2472',
     ink: '#0b0518',
@@ -66,8 +66,8 @@ export const GRADES = {
     id: 'neon',
     label: 'Neon',
     note: 'cyan + hot pink',
-    plates: ['#07122b', '#103050', '#8d1f6e', '#ff5c8f'],
-    highlight: '#ffd0e2',
+    plates: ['#061023', '#0e2a45', '#3c1f60', '#a81f74', '#f2588c'],
+    highlight: '#ffd3e4',
     rim: '#ffc4a8',
     shade: '#123f63',
     ink: '#04060f',
@@ -81,8 +81,8 @@ export const GRADES = {
     id: 'heat',
     label: 'Heat',
     note: 'amber + rust',
-    plates: ['#1d0c09', '#4c1a0f', '#9c3c17', '#e09438'],
-    highlight: '#ffdc93',
+    plates: ['#190a07', '#3f150d', '#792c12', '#b9541c', '#e89440'],
+    highlight: '#ffdf9c',
     rim: '#ffeec0',
     shade: '#3a2a5e',
     ink: '#120603',
@@ -96,8 +96,8 @@ export const GRADES = {
     id: 'chrome',
     label: 'Chrome',
     note: 'steel + ice',
-    plates: ['#081220', '#1c3444', '#4c7384', '#b6cdd0'],
-    highlight: '#eef8f6',
+    plates: ['#07101c', '#16303f', '#33596a', '#6f97a4', '#aec7cb'],
+    highlight: '#f0faf8',
     rim: '#ffe2b8',
     shade: '#122a44',
     ink: '#04090f',
@@ -226,10 +226,23 @@ export function processPhoto(source, options = {}) {
   const { black, white } = percentiles(luma, n, Math.max(1, Math.floor(n / 4096)));
   const span = Math.max(0.16, white - black);
 
+  // The stretched value field, then one more shared adjustment: every panel's
+  // mean is pulled toward the same mid grey. That is the second half of "one
+  // light" — the percentiles fix the ends, this fixes the middle, so a frame
+  // shot into shadow doesn't sit dark beside a frame shot into sun.
+  const value = new Float32Array(n);
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const v = clamp01((luma[i] - black) / span);
+    value[i] = v;
+    sum += v;
+  }
+  const lift = (0.5 - sum / n) * 0.55;
+
   const base = boxBlur(
     (() => {
       const v = new Float32Array(n);
-      for (let i = 0; i < n; i++) v[i] = clamp01((luma[i] - black) / span);
+      for (let i = 0; i < n; i++) v[i] = clamp01(value[i] + lift);
       return v;
     })(),
     w,
@@ -250,9 +263,9 @@ export function processPhoto(source, options = {}) {
     const row = y * w;
     for (let x = 0; x < w; x++) {
       const i = row + x;
-      // 3. Value curve: stretch, then a gentle S so the mid plates hold shape.
-      let v = clamp01((luma[i] - black) / span);
-      v = v * v * (3 - 2 * v) * 0.34 + v * 0.66;
+      // 3. Value curve: the shared level, then a gentle S so mids hold shape.
+      let v = clamp01(value[i] + lift);
+      v = v * v * (3 - 2 * v) * 0.30 + v * 0.70;
 
       const detail = v - base[i];
       // +1 at the sun side (left), -1 at the shade side.
@@ -264,12 +277,13 @@ export function processPhoto(source, options = {}) {
       let mixRim = Math.max(0, side) * 0.10;
       let mixShade = Math.max(0, -side) * 0.12;
 
-      // Warm rim: local light catching the sun-facing edge of the figure.
+      // Warm rim: local light catching the sun-facing edge of the figure. Bounded,
+      // so a panel with a big bright sky can't lift its whole upper half to white.
       if (detail > 0.006) {
-        const k = Math.min(1, detail * 9);
+        const k = Math.min(1, detail * 7);
         if (side > -0.1) {
-          mixRim = Math.min(0.78, mixRim + k * 0.7);
-          plate = Math.min(3, plate + 1);
+          mixRim = Math.min(0.52, mixRim + k * 0.44);
+          if (v > 0.55) plate = Math.min(3, plate + 1);
         }
       }
       // Cool shade: the far side and the recesses drop a plate and go blue.
@@ -280,9 +294,9 @@ export function processPhoto(source, options = {}) {
           plate = Math.max(0, plate - 1);
         }
       }
-      // A last warm kick on true speculars, so highlights read as sun.
-      if (v > 0.95) mixRim = Math.min(0.85, mixRim + 0.45);
-
+      // Hold the whole panel inside the grade's own range: a plate never goes
+      // brighter than the highlight or darker than the shadow, which is what
+      // keeps four panels from four photos in one light.
       let [r, g, b] = plates[plate];
       if (mixRim > 0) {
         const k = mixRim;
@@ -303,7 +317,11 @@ export function processPhoto(source, options = {}) {
         b = b * 0.9 + ink[2] * 0.1;
       }
 
-      const grain = (noise(x, y, seed) - 0.5) * dither * 7;
+      r = r > hot[0] ? hot[0] : r < plates[0][0] ? plates[0][0] : r;
+      g = g > hot[1] ? hot[1] : g < plates[0][1] ? plates[0][1] : g;
+      b = b > hot[2] ? hot[2] : b < plates[0][2] ? plates[0][2] : b;
+
+      const grain = (noise(x, y, seed) - 0.5) * dither * 6;
       const p = i * 4;
       px[p] = r + grain;
       px[p + 1] = g + grain;
