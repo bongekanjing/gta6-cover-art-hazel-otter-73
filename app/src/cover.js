@@ -137,8 +137,13 @@ export function renderCover(ctx, W, H, state, options = {}) {
   });
   ctx.restore();
 
-  // The panels.
+  // The panels. The field behind them is the poster's ink, so every gutter is a
+  // clean dark rule instead of a slice of sky showing through.
   const rects = panelsOf(state.layout);
+  if (!layout.overlay) {
+    ctx.fillStyle = grade.ink;
+    ctx.fillRect(area.x, area.y, area.w, area.h * 0.64);
+  }
   for (let i = 0; i < rects.length; i++) {
     const rect = mapRect(rects[i], area);
     const crop = state.cropAt(i);

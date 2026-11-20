@@ -19,6 +19,8 @@ const FIELD = 0.612;
 const COL3 = (1 - M * 2 - G * 2) / 3;
 /** The classic layout's hero column. */
 const HERO = 0.402;
+/** A grid row's height: two equal rows fill the field exactly. */
+const ROW = (FIELD - M * 2 - G) / 2;
 
 /**
  * The layouts. `title` is the band the lockup and furniture are fitted to;
@@ -56,12 +58,12 @@ export const LAYOUTS = {
     note: 'six windows',
     overlay: false,
     panels: [
-      { x: M, y: M, w: COL3, h: (0.302 - M - G) / 1 },
-      { x: M + COL3 + G, y: M, w: COL3, h: 0.284 },
-      { x: M + (COL3 + G) * 2, y: M, w: COL3, h: 0.284 },
-      { x: M, y: 0.315, w: COL3, h: FIELD - 0.315 },
-      { x: M + COL3 + G, y: 0.315, w: COL3, h: FIELD - 0.315 },
-      { x: M + (COL3 + G) * 2, y: 0.315, w: COL3, h: FIELD - 0.315 },
+      { x: M, y: M, w: COL3, h: ROW },
+      { x: M + COL3 + G, y: M, w: COL3, h: ROW },
+      { x: M + (COL3 + G) * 2, y: M, w: COL3, h: ROW },
+      { x: M, y: M + ROW + G, w: COL3, h: FIELD - M - ROW - G },
+      { x: M + COL3 + G, y: M + ROW + G, w: COL3, h: FIELD - M - ROW - G },
+      { x: M + (COL3 + G) * 2, y: M + ROW + G, w: COL3, h: FIELD - M - ROW - G },
     ],
     title: { x: M, y: 0.628, w: 1 - M * 2, h: 0.322 },
   },

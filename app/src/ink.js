@@ -271,8 +271,12 @@ export function processPhoto(source, options = {}) {
       // +1 at the sun side (left), -1 at the shade side.
       const side = 1 - 2 * x * invW;
 
-      let plate = Math.floor((v + (BAYER[y & 1][x & 1] - 0.5) * 0.055) * 4.0);
-      plate = plate < 0 ? 0 : plate > 3 ? 3 : plate;
+      // Five plates, with the value range slightly compressed at both ends so the
+      // brightest and darkest plates stay accents instead of swallowing a panel.
+      const shaped = 0.035 + v * 0.93;
+      const top = plates.length - 1;
+      let plate = Math.floor((shaped + (BAYER[y & 1][x & 1] - 0.5) * 0.05) * plates.length);
+      plate = plate < 0 ? 0 : plate > top ? top : plate;
 
       let mixRim = Math.max(0, side) * 0.10;
       let mixShade = Math.max(0, -side) * 0.12;
@@ -283,7 +287,7 @@ export function processPhoto(source, options = {}) {
         const k = Math.min(1, detail * 7);
         if (side > -0.1) {
           mixRim = Math.min(0.52, mixRim + k * 0.44);
-          if (v > 0.55) plate = Math.min(3, plate + 1);
+          if (v > 0.58) plate = Math.min(plates.length - 1, plate + 1);
         }
       }
       // Cool shade: the far side and the recesses drop a plate and go blue.
