@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Vice Ledger — cover art maker</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="rail" aria-label="Cover controls">
+    <header class="brand">
+      <span class="brand-mark" aria-hidden="true">◆</span>
+      <span class="brand-text">
+        <b>Vice Ledger</b>
+        <i>cover art maker</i>
+      </span>
+    </header>
+
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add photos: click or drop files here">
+      <span class="drop-icon" aria-hidden="true">＋</span>
+      <span class="drop-copy"><b>Add photos</b><i>drop files or click</i></span>
+    </div>
+    <input id="photo-input" type="file" accept="image/*" multiple hidden>
+
+    <section class="field">
+      <label class="field-label" for="caption">Caption</label>
+      <div class="input-wrap">
+        <input id="caption" type="text" maxlength="42" value="Vice Ledger" autocomplete="off" spellcheck="false">
+        <span class="counter" id="caption-count">11/42</span>
+      </div>
+    </section>
+
+    <section class="field">
+      <h2 class="field-label">Panel</h2>
+      <div class="panel-row" id="panels" role="group" aria-label="Choose a panel to crop">
+        <button type="button" data-panel="0" class="pbtn">1</button>
+        <button type="button" data-panel="1" class="pbtn">2</button>
+        <button type="button" data-panel="2" class="pbtn">3</button>
+        <button type="button" data-panel="3" class="pbtn">4</button>
+        <button type="button" data-panel="4" class="pbtn">5</button>
+        <button type="button" data-panel="5" class="pbtn">6</button>
+      </div>
+      <div class="crop-card">
+        <div class="crop-head">
+          <b id="crop-label">Panel 1</b>
+          <button type="button" id="cycle" class="mini">photo: <span id="crop-photo">—</span> ↔</button>
+        </div>
+        <label class="range">
+          <span>Zoom <output id="zoom-out">1.04×</output></span>
+          <input id="zoom" type="range" min="1" max="2.6" step="0.01" value="1.04">
+        </label>
+        <label class="range">
+          <span>Pan across</span>
+          <input id="pan-x" type="range" min="-1" max="1" step="0.02" value="0">
+        </label>
+        <label class="range">
+          <span>Pan down</span>
+          <input id="pan-y" type="range" min="-1" max="1" step="0.02" value="0">
+        </label>
+        <button type="button" id="reseed" class="mini wide">Reset crops</button>
+      </div>
+      <div class="tray" id="tray" aria-label="Photo tray"></div>
+    </section>
+
+    <section class="field">
+      <h2 class="field-label">Layout</h2>
+      <div id="layouts"></div>
+    </section>
+
+    <section class="field">
+      <h2 class="field-label">Grade</h2>
+      <div id="grades"></div>
+    </section>
+
+    <section class="field">
+      <h2 class="field-label">Size</h2>
+      <div id="sizes"></div>
+    </section>
+
+    <section class="field">
+      <button type="button" id="export" class="export">Export Widescreen <em id="export-note">1920 × 1080 PNG</em></button>
+      <p class="status" id="status" role="status">Everything runs offline. Nothing is uploaded.</p>
+    </section>
+  </aside>
+
+  <main class="stage">
+    <div class="stage-head">
+      <span class="stage-tag">Preview</span>
+      <span class="stage-stat" id="stat"></span>
+    </div>
+    <div class="preview-box">
+      <canvas id="preview" width="960" height="540" aria-label="Cover preview"></canvas>
+    </div>
+    <p class="hint">Keys: <kbd>1</kbd>–<kbd>4</kbd> panel · <kbd>g</kbd> grade · <kbd>l</kbd> layout</p>
+  </main>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
